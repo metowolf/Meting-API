@@ -90,7 +90,7 @@ function __handler($server, $type, $id, $base)
         if ($server == 'netease') {
             $url = str_replace('://m7c.', '://m7.', $url);
             $url = str_replace('://m8c.', '://m8.', $url);
-            $url = str_replace('http://.', 'https://', $url);
+            $url = str_replace('http://', 'https://', $url);
         }
         if ($server == 'tencent') {
             $url = str_replace('http://', 'https://', $url);
