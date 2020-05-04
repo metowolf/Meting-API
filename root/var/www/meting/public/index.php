@@ -137,7 +137,7 @@ function __handler($server, $type, $id, $base)
 
 function auth($name)
 {
-    return hash_hmac('sha1', $name, getenv('AUTH_SECRET') ?? ('meting-secret-' . getenv('HOSTNAME')));
+    return hash_hmac('sha1', $name, getenv('AUTH_SECRET') ?? 'meting-secret');
 }
 
 function lrctrim($lyrics)
@@ -193,7 +193,7 @@ function main()
     $type = $_GET['type'] ?? 'search';
     $id = $_GET['id'] ?? 'hello';
     $auth = $_GET['auth'] ?? '';
-    $base = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'] . strtok($_SERVER['REQUEST_URI'], '?');
+    $base = getenv('API_URL') ?? (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'] . strtok($_SERVER['REQUEST_URI'], '?');
 
     $result = handler($server, $type, $id, $auth, $base);
 
