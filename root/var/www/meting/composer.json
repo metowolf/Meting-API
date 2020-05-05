@@ -1,0 +1,14 @@
+{
+    "name": "metowolf/meting-api",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "metowolf",
+            "email": "i@i-meto.com"
+        }
+    ],
+    "require": {
+        "metowolf/meting": "^1.5"
+    }
+}

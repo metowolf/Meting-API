@@ -1,10 +1,8 @@
 <?php
 
-require '../Meting/src/Meting.php';
-require '../Cache/autoload.php';
+require '../vendor/autoload.php';
 
 use Metowolf\Meting;
-use Gregwar\Cache\Cache;
 
 function handler($server, $type, $id, $auth, $base)
 {
@@ -23,20 +21,18 @@ function handler($server, $type, $id, $auth, $base)
         }
     }
 
-    $file = md5($server.$type.$id.$base) . '.json';
-    $cache = new Cache;
-    $cache->setCacheDirectory('/tmp/cache');
-    $data = $cache->getOrCreate(
-        $file,
-        [
-            'max-age' => ($type == 'url') ? 600 : 36000,
-        ],
-        function () use ($server, $type, $id, $base, $cache, $file) {
-            $t = __handler($server, $type, $id, $base);
-            return json_encode($t);
-        }
-    );
-    return json_decode($data, true);
+    $file = md5($server.$type.$id.$base);
+
+    $data = apcu_fetch($file);
+    if ($data == FALSE) {
+        $ttl = ($type == 'url') ? 600 : 36000;
+        $data = __handler($server, $type, $id, $base);
+        apcu_store($file, json_encode($data), $ttl);
+    } else {
+        $data = json_decode($data, true);
+    }
+
+    return $data;
 }
 
 function __handler($server, $type, $id, $base)
@@ -68,7 +64,9 @@ function __handler($server, $type, $id, $base)
         $data = json_decode($data, true);
         return [
             'status' => 200,
-            'content-type' => 'text/plain; charset=utf-8',
+            'headers' => [
+                'content-type' => 'text/plain; charset=utf-8',
+            ],
             'body' => lrctran($data['lyric'], $data['tlyric'])
         ];
     }
@@ -130,14 +128,17 @@ function __handler($server, $type, $id, $base)
 
     return [
         'status' => 200,
-        'content-type' => 'application/json',
+        'headers' => [
+            'content-type' => 'application/json',
+            'meting-request-time' => date(DATE_ATOM),
+        ],
         'body' => json_encode($music)
     ];
 }
 
 function auth($name)
 {
-    return hash_hmac('sha1', $name, getenv('AUTH_SECRET') ?? 'meting-secret');
+    return hash_hmac('sha1', $name, getenv('METING_AUTH_SECRET') ?? 'meting-secret');
 }
 
 function lrctrim($lyrics)
@@ -193,7 +194,11 @@ function main()
     $type = $_GET['type'] ?? 'search';
     $id = $_GET['id'] ?? 'hello';
     $auth = $_GET['auth'] ?? '';
-    $base = getenv('API_URL') ?? (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'] . strtok($_SERVER['REQUEST_URI'], '?');
+    $base = getenv('METING_PREFIX_URL');
+
+    if ($base == FALSE) {
+        $base = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'] . strtok($_SERVER['REQUEST_URI'], '?');
+    }
 
     $result = handler($server, $type, $id, $auth, $base);
 
@@ -210,7 +215,11 @@ function main()
     }
 
     if ($result['status'] >= 200) {
-        header("Content-Type: " . $result['content-type']);
+        if (!empty($result['headers'])) {
+            foreach ($result['headers'] as $k => $v) {
+                header($k . ': ' . $v);
+            }
+        }
         echo $result['body'];
         return;
     }

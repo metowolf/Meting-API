@@ -2,22 +2,30 @@
 
 set -e
 
-docker-php-ext-install bcmath
+apk update
+apk add logrotate
+apk add openrc
+apk add php7 \
+    php7-fpm \
+    php7-opcache \
+    php7-bcmath \
+    php7-curl \
+    php7-apcu \
+    php7-mbstring \
+    php7-json \
+    php7-openssl
+apk add composer
+apk add nginx
 
-cd /var/www/meting/
+# openrc
+mkdir -p /run/openrc
+touch /run/openrc/softlevel
 
-# Cache
-CACHE_VERSION=1.0.12
-curl -L https://github.com/Gregwar/Cache/archive/v${CACHE_VERSION}.tar.gz -o Cache.tar.gz
-tar zxvf Cache.tar.gz
-rm Cache.tar.gz
-ln -s Cache-${CACHE_VERSION} Cache
-mkdir /tmp/cache
-chown www-data /tmp/cache
+# composer
+cd /var/www/meting
+composer install
+composer clearcache
 
-# Meting
-METING_VERSION=1.5.7
-curl -L https://github.com/metowolf/Meting/archive/v${METING_VERSION}.tar.gz -o Meting.tar.gz
-tar zxvf Meting.tar.gz
-rm Meting.tar.gz
-ln -s Meting-${METING_VERSION} Meting
+# clean
+apk del composer
+rm -rf /var/cache/apk/*
