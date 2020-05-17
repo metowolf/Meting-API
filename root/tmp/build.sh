@@ -23,7 +23,7 @@ touch /run/openrc/softlevel
 
 # composer
 cd /var/www/meting
-composer install
+composer install --no-dev --optimize-autoloader
 composer clearcache
 
 # clean
