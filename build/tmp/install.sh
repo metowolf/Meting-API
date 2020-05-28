@@ -26,6 +26,10 @@ cd /var/www/meting
 composer install --no-dev --optimize-autoloader
 composer clearcache
 
+# log
+chown -R nginx /var/log/nginx 
+sed -i -e 's:/var/log/messages {}:# /var/log/messages {}:' /etc/logrotate.conf
+
 # clean
 apk del composer
 rm -rf /var/cache/apk/*
