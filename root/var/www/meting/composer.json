@@ -1,5 +1,6 @@
 {
     "name": "metowolf/meting-api",
+    "description": "Meting API Server",
     "type": "project",
     "license": "MIT",
     "authors": [
