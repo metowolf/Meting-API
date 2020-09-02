@@ -3,7 +3,6 @@ FROM alpine:3.12
 LABEL maintainer="metowolf <i@i-meto.com>"
 
 RUN apk update
-RUN apk add logrotate
 RUN apk add openrc
 RUN apk add php7 \
   php7-fpm \
@@ -29,8 +28,7 @@ RUN cd /var/www/meting \
   && composer clearcache
 
 # log
-RUN chown -R nginx /var/log/nginx 
-RUN sed -i -e 's:/var/log/messages {}:# /var/log/messages {}:' /etc/logrotate.conf
+RUN chown -R nginx /var/log/nginx
 
 # clean
 RUN apk del composer
