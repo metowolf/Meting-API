@@ -1,6 +1,7 @@
 FROM alpine:3.12
 
 LABEL maintainer="metowolf <i@i-meto.com>"
+LABEL version="1.5.7"
 
 RUN apk update
 RUN apk add openrc
