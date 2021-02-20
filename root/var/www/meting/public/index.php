@@ -98,7 +98,7 @@ function __handler($server, $type, $id, $base)
             $url = str_replace('http://', 'https://', $url);
         }
         if ($server == 'baidu') {
-            $url = str_replace('http://zhangmenshiting.qianqian.com', 'https://gss3.baidu.com/y0s1hSulBw92lNKgpU_Z2jR7b2w6buu', $url);
+            $url = str_replace('http://zhangmenshiting.baidu.com', 'https://gss3.baidu.com/y0s1hSulBw92lNKgpU_Z2jR7b2w6buu', $url);
         }
 
         if (empty($url)) {
