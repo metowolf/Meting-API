@@ -4,188 +4,37 @@ require '../vendor/autoload.php';
 
 use Metowolf\Meting;
 
-function handler($server, $type, $id, $auth, $base)
-{
-    if (empty($id) || !in_array($server, ['netease','tencent','baidu','xiami','kugou']) || !in_array($type, ['song','album','search','artist','playlist','lrc','url','pic'])) {
-        return [
-            'status' => 400
-        ];
-    }
-
-    if (in_array($type, ['lrc','url','pic'])) {
-        $token = auth($server . $type . $id);
-        if ($token != $auth) {
-            return [
-                'status' => 403
-            ];
-        }
-    }
-
-    $file = md5($server.$type.$id.$base);
-
-    $data = apcu_fetch($file);
-    if ($data == FALSE) {
-        $ttl = ($type == 'url') ? 600 : 36000;
-        $data = __handler($server, $type, $id, $base);
-        apcu_store($file, json_encode($data), $ttl);
-    } else {
-        $data = json_decode($data, true);
-    }
-
-    return $data;
-}
-
-function __handler($server, $type, $id, $base)
+function handler($server, $type, $id)
 {
     if (empty($id)) {
-        return [
-            'status' => 400
-        ];
+        throw new Exception('require id.');
     }
 
-    if (!in_array($server, ['netease','tencent','baidu','xiami','kugou'])) {
-        return [
-            'status' => 400
-        ];
+    if (!in_array($server, ['netease', 'tencent', 'baidu', 'xiami', 'kugou', 'kuwo'])) {
+        throw new Exception('unsupported server.');
     }
 
-    if (!in_array($type, ['song','album','search','artist','playlist','lrc','url','pic'])) {
-        return [
-            'status' => 400
-        ];
+    if (!in_array($type, ['song', 'album', 'search', 'artist', 'playlist', 'lrc', 'url', 'pic'])) {
+        throw new Exception('unsupported type.');
     }
-
 
     $api = new Meting($server);
     $api->format(true);
+    if (getenv('METING_PROXY')) {
+        $api->proxy(getenv('METING_PROXY'));
+    }
+    if (!empty($_SERVER['HTTP_COOKIE'])) {
+        $api->cookie($_SERVER['HTTP_COOKIE']);
+    }
 
     if ($type == 'lrc') {
-        $data = $api->lyric($id);
-        $data = json_decode($data, true);
-        return [
-            'status' => 200,
-            'headers' => [
-                'content-type' => 'text/plain; charset=utf-8',
-            ],
-            'body' => lrctran($data['lyric'], $data['tlyric'])
-        ];
-    }
-
-    if ($type == 'pic') {
-        $data = $api->pic($id, 90);
-        $data = json_decode($data, true);
-        return [
-            'status' => 302,
-            'url' => $data['url']
-        ];
-    }
-
-    if ($type == 'url') {
-        $data = $api->url($id, 320);
-        $data = json_decode($data, true);
-        $url = $data['url'];
-
-        if ($server == 'netease') {
-            $url = str_replace('://m7c.', '://m7.', $url);
-            $url = str_replace('://m8c.', '://m8.', $url);
-            $url = str_replace('http://', 'https://', $url);
-        }
-        if ($server == 'tencent') {
-            $url = str_replace('http://', 'https://', $url);
-            $url = str_replace('ws.stream.qqmusic.qq.com', 'dl.stream.qqmusic.qq.com', $url);
-        }
-        if ($url == 'xiami') {
-            $url = str_replace('http://', 'https://', $url);
-        }
-        if ($server == 'baidu') {
-            $url = str_replace('http://zhangmenshiting.qianqian.com', 'https://gss3.baidu.com/y0s1hSulBw92lNKgpU_Z2jR7b2w6buu', $url);
-        }
-
-        if (empty($url)) {
-            return [
-                'status' => 404
-            ];
-        }
-
-        return [
-            'status' => 302,
-            'url' => $url
-        ];
+        $type = 'lyric';
     }
 
     $data = $api->$type($id);
     $data = json_decode($data, true);
-    $music = [];
-    foreach ($data as $vo) {
-        $music[] = array(
-            'title'  => $vo['name'],
-            'author' => implode(' / ', $vo['artist']),
-            'url'    => $base.'?server='.$vo['source'].'&type=url&id='.$vo['url_id'].'&auth='.auth($vo['source'].'url'.$vo['url_id']),
-            'pic'    => $base.'?server='.$vo['source'].'&type=pic&id='.$vo['pic_id'].'&auth='.auth($vo['source'].'pic'.$vo['pic_id']),
-            'lrc'    => $base.'?server='.$vo['source'].'&type=lrc&id='.$vo['lyric_id'].'&auth='.auth($vo['source'].'lrc'.$vo['lyric_id']),
-        );
-    }
 
-    return [
-        'status' => 200,
-        'headers' => [
-            'content-type' => 'application/json',
-            'meting-request-time' => date(DATE_ATOM),
-        ],
-        'body' => json_encode($music)
-    ];
-}
-
-function auth($name)
-{
-    return hash_hmac('sha1', $name, getenv('METING_AUTH_SECRET') ?? 'meting-secret');
-}
-
-function lrctrim($lyrics)
-{
-    $result = "";
-    $lyrics = explode("\n", $lyrics);
-    $data = array();
-    foreach ($lyrics as $lyric) {
-        preg_match('/\[(\d{2}):(\d{2}\.?\d*)]/', $lyric, $lrcTimes);
-        $lrcText = preg_replace('/\[(\d{2}):(\d{2}\.?\d*)]/', '', $lyric);
-        if (empty($lrcTimes)) {
-            continue;
-        }
-        $lrcTimes = intval($lrcTimes[1]) * 60000 + intval(floatval($lrcTimes[2]) * 1000);
-        $lrcText = preg_replace('/\s\s+/', ' ', $lrcText);
-        $lrcText = trim($lrcText);
-        $data[] = array($lrcTimes, $lrcText);
-    }
-    sort($data);
     return $data;
-}
-
-function lrctran($lyric, $tlyric)
-{
-    $lyric = lrctrim($lyric);
-    $tlyric = lrctrim($tlyric);
-    $len1 = count($lyric);
-    $len2 = count($tlyric);
-    $result = "";
-    for ($i = 0, $j = 0; $i < $len1 && $j < $len2; $i++) {
-        while ($lyric[$i][0] > $tlyric[$j][0] && $j + 1 < $len2) {
-            $j++;
-        }
-        if ($lyric[$i][0] == $tlyric[$j][0]) {
-            $tlyric[$j][1] = str_replace('/', '', $tlyric[$j][1]);
-            if (!empty($tlyric[$j][1])) {
-                $lyric[$i][1] .= " ({$tlyric[$j][1]})";
-            }
-            $j++;
-        }
-    }
-    for ($i = 0; $i < $len1; $i++) {
-        $t = $lyric[$i][0];
-        $result .= sprintf("[%02d:%02d.%03d]%s\n", $t / 60000, $t % 60000 / 1000, $t % 1000, $lyric[$i][1]);
-    }
-
-    return $result;
 }
 
 function main()
@@ -193,36 +42,23 @@ function main()
     $server = $_GET['server'] ?? 'netease';
     $type = $_GET['type'] ?? 'search';
     $id = $_GET['id'] ?? 'hello';
-    $auth = $_GET['auth'] ?? '';
-    $base = getenv('METING_PREFIX_URL');
 
-    if ($base == FALSE) {
-        $base = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'] . strtok($_SERVER['REQUEST_URI'], '?');
+    try {
+        $data = handler($server, $type, $id);
+        $result = [
+            'success' => true,
+            'message' => $data
+        ];
+    } catch (Exception $e) {
+        $result = [
+            'success' => false,
+            'message' => $e->getMessage()
+        ];
     }
 
-    $result = handler($server, $type, $id, $auth, $base);
-
-    if ($result['status'] >= 400) {
-        http_response_code($result['status']);
-        return;
-    }
-
-    header("Access-Control-Allow-Origin: *");
-
-    if ($result['status'] >= 300) {
-        header('Location: ' . $result['url']);
-        return;
-    }
-
-    if ($result['status'] >= 200) {
-        if (!empty($result['headers'])) {
-            foreach ($result['headers'] as $k => $v) {
-                header($k . ': ' . $v);
-            }
-        }
-        echo $result['body'];
-        return;
-    }
+    header('Access-Control-Allow-Origin: *');
+    header('Content-Type: application/json');
+    echo json_encode($result);
 }
 
 main();

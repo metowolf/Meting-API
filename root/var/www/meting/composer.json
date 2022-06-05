@@ -10,6 +10,6 @@
         }
     ],
     "require": {
-        "metowolf/meting": "^1.5"
+        "metowolf/meting": "^1.5.11"
     }
 }

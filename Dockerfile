@@ -1,19 +1,18 @@
-FROM alpine:3.12
+FROM alpine:3
 
 LABEL maintainer="metowolf <i@i-meto.com>"
-LABEL version="1.5.7"
+LABEL version="1.5.11"
 
 RUN apk update
 RUN apk add openrc
-RUN apk add php7 \
-  php7-fpm \
-  php7-opcache \
-  php7-bcmath \
-  php7-curl \
-  php7-apcu \
-  php7-mbstring \
-  php7-json \
-  php7-openssl
+RUN apk add php8 \
+  php8-fpm \
+  php8-opcache \
+  php8-bcmath \
+  php8-curl \
+  php8-mbstring \
+  php8-json \
+  php8-openssl
 RUN apk add composer
 RUN apk add nginx
 
