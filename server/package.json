@@ -1,0 +1,35 @@
+{
+  "name": "@meting/server",
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "type": "module",
+  "author": "metowolf",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@koa/cors": "^3.3.0",
+    "@koa/router": "^10.1.1",
+    "dotenv": "^16.0.1",
+    "got": "^12.1.0",
+    "hash.js": "^1.1.7",
+    "koa": "^2.13.4",
+    "koa-pino-logger": "^4.0.0",
+    "lru-cache": "^7.10.1",
+    "pino": "^8.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.17.0",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.26.0",
+    "eslint-plugin-n": "^15.2.1",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^6.0.0",
+    "eslint-plugin-standard": "^5.0.0",
+    "nodemon": "^2.0.16"
+  }
+}
