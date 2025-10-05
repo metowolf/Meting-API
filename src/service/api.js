@@ -3,9 +3,9 @@ import hashjs from 'hash.js'
 import { HTTPException } from 'hono/http-exception'
 import config from '../config.js'
 import { format as lyricFormat } from '../utils/lyric.js'
-import LRU from 'lru-cache'
+import { LRUCache } from 'lru-cache'
 
-const cache = new LRU({
+const cache = new LRUCache({
   max: 1000,
   ttl: 1000 * 30
 })
