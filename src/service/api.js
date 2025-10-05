@@ -1,5 +1,6 @@
 import Meting from '@meting/core/lib/meting.esm.js'
 import hashjs from 'hash.js'
+import { HTTPException } from 'hono/http-exception'
 import config from '../config.js'
 import { format as lyricFormat } from '../utils/lyric.js'
 import LRU from 'lru-cache'
@@ -19,9 +20,9 @@ const METING_METHODS = {
   pic: 'pic'
 }
 
-export default async (ctx) => {
+export default async (c) => {
   // 1. 初始化参数
-  const query = ctx.request.query
+  const query = c.req.query()
   const server = query.server || 'netease'
   const type = query.type || 'search'
   const id = query.id || 'hello'
@@ -29,16 +30,16 @@ export default async (ctx) => {
 
   // 2. 校验参数
   if (!['netease', 'tencent', 'kugou', 'xiami', 'baidu', 'kuwo'].includes(server)) {
-    ctx.throw(400, 'server 参数不合法')
+    throw new HTTPException(400, { message: 'server 参数不合法' })
   }
   if (!['song', 'album', 'search', 'artist', 'playlist', 'lrc', 'url', 'pic'].includes(type)) {
-    ctx.throw(400, 'type 参数不合法')
+    throw new HTTPException(400, { message: 'type 参数不合法' })
   }
 
   // 3. 鉴权
   if (['lrc', 'url', 'pic'].includes(type)) {
     if (auth(server, type, id) !== token) {
-      ctx.throw(401, '鉴权失败，非法调用')
+      throw new HTTPException(401, { message: '鉴权失败,非法调用' })
     }
   }
 
@@ -46,7 +47,7 @@ export default async (ctx) => {
   const cacheKey = `${server}/${type}/${id}`
   let data = cache.get(cacheKey)
   if (data === undefined) {
-    ctx.set('x-cache', 'miss')
+    c.header('x-cache', 'miss')
     const meting = new Meting(server)
     meting.format(true)
     const method = METING_METHODS[type]
@@ -54,12 +55,12 @@ export default async (ctx) => {
     try {
       response = await meting[method](id)
     } catch (error) {
-      ctx.throw(500, '上游 API 调用失败')
+      throw new HTTPException(500, { message: '上游 API 调用失败' })
     }
     try {
       data = JSON.parse(response)
     } catch (error) {
-      ctx.throw(500, '上游 API 返回格式异常')
+      throw new HTTPException(500, { message: '上游 API 返回格式异常' })
     }
     cache.set(cacheKey, data, {
       ttl: type === 'url' ? 1000 * 60 * 10 : 1000 * 60 * 60
@@ -71,8 +72,7 @@ export default async (ctx) => {
     let url = data.url
     // 空结果返回 404
     if (!url) {
-      ctx.status = 404
-      return
+      return c.body(null, 404)
     }
     // 链接转换
     if (server === 'netease') {
@@ -90,27 +90,23 @@ export default async (ctx) => {
       url = url
         .replace('http://zhangmenshiting.qianqian.com', 'https://gss3.baidu.com/y0s1hSulBw92lNKgpU_Z2jR7b2w6buu')
     }
-    ctx.redirect(url)
-    return
+    return c.redirect(url)
   }
 
   if (type === 'pic') {
     const url = data.url
     // 空结果返回 404
     if (!url) {
-      ctx.status = 404
-      return
+      return c.body(null, 404)
     }
-    ctx.redirect(url)
-    return
+    return c.redirect(url)
   }
 
   if (type === 'lrc') {
-    ctx.body = lyricFormat(data.lyric, data.tlyric || '')
-    return
+    return c.text(lyricFormat(data.lyric, data.tlyric || ''))
   }
 
-  ctx.body = data.map(x => {
+  return c.json(data.map(x => {
     return {
       title: x.name,
       author: x.artist.join(' / '),
@@ -118,7 +114,7 @@ export default async (ctx) => {
       pic: `${config.meting.url}/api?server=${server}&type=pic&id=${x.pic_id}&auth=${auth(server, 'pic', x.pic_id)}`,
       lrc: `${config.meting.url}/api?server=${server}&type=lrc&id=${x.lyric_id}&auth=${auth(server, 'lrc', x.lyric_id)}`
     }
-  })
+  }))
 }
 
 const auth = (server, type, id) => {
