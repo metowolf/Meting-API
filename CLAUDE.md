@@ -4,14 +4,15 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-Meting-API 是一个基于 Koa 的音乐 API 代理服务,封装了 @meting/core 库提供的多平台音乐 API。项目支持网易云、腾讯、酷狗、虾米、百度、酷我等音乐平台的搜索、歌曲、专辑、歌手、歌单、歌词、URL 和封面图片获取。
+Meting-API 是一个基于 Hono.js 的音乐 API 代理服务,封装了 @meting/core 库提供的多平台音乐 API。项目支持网易云、腾讯、酷狗、虾米、百度、酷我等音乐平台的搜索、歌曲、专辑、歌手、歌单、歌词、URL 和封面图片获取。
 
 ## 核心架构
 
 ### 认证机制
 - 敏感操作(lrc、url、pic)使用 HMAC-SHA1 token 认证
-- token 生成逻辑在 `src/service/api.js:124` 的 `auth()` 函数
+- token 生成逻辑在 `src/service/api.js:120` 的 `auth()` 函数
 - 认证参数通过查询字符串中的 `token` 或 `auth` 字段传递
+- token 计算公式: `HMAC-SHA1(METING_TOKEN, "${server}${type}${id}")`
 
 ### 缓存策略
 - 使用 LRU 缓存(lru-cache)缓存 API 响应
@@ -20,10 +21,10 @@ Meting-API 是一个基于 Koa 的音乐 API 代理服务,封装了 @meting/core
 - 缓存命中通过 `x-cache` 响应头标识
 
 ### URL 转换逻辑
-不同音乐平台的 URL 需要特殊处理(在 `src/service/api.js:70-95`):
+不同音乐平台的 URL 需要特殊处理(在 `src/service/api.js:78-92`):
 - **网易云**: m7c/m8c 替换为 m7/m8,强制使用 HTTPS
-- **腾讯**: 替换 ws.stream 为 dl.stream,强制使用 HTTPS
-- **百度**: 替换域名为 CDN 地址
+- **腾讯**: ws.stream.qqmusic.qq.com 替换为 dl.stream.qqmusic.qq.com,强制使用 HTTPS
+- **百度**: zhangmenshiting.qianqian.com 替换为 gss3.baidu.com CDN 地址
 
 ### 歌词格式化
 `src/utils/lyric.js` 实现了歌词与翻译的合并:
@@ -70,20 +71,21 @@ docker run -p 3000:3000 -e METING_URL=https://example.com -e METING_TOKEN=secret
 
 ## 技术栈
 
-- **运行时**: Node.js 17+ (ES Module)
-- **框架**: Koa 2.x + @koa/router + @koa/cors
-- **核心库**: @meting/core (音乐 API 封装)
+- **运行时**: Node.js 18+ (ES Module)
+- **框架**: Hono 4.x + @hono/node-server
+- **核心库**: @meting/core 1.5+ (音乐 API 封装)
 - **缓存**: lru-cache 7.x
-- **日志**: pino + koa-pino-logger (JSON 格式)
+- **日志**: pino (JSON 格式,自定义请求日志中间件)
 - **加密**: hash.js (HMAC-SHA1)
 - **代码规范**: ESLint Standard
 
 ## 开发注意事项
 
 ### 错误处理
-- 使用 Koa 错误中间件统一处理(`src/middleware/errors.js`)
+- 使用 Hono 错误中间件统一处理(`src/middleware/errors.js`)
 - 错误信息通过 `x-error-message` 响应头传递
-- 上游 API 错误分为调用失败(500)和格式异常(500)两类
+- 使用 HTTPException 抛出 HTTP 错误(400/401/404/500)
+- 上游 API 错误分为调用失败和格式异常两类,均返回 500
 
 ### 参数验证
 在处理请求前必须严格校验:
