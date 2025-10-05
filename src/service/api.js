@@ -1,4 +1,4 @@
-import got from 'got'
+import Meting from '@meting/core/lib/meting.esm.js'
 import hashjs from 'hash.js'
 import config from '../config.js'
 import { format as lyricFormat } from '../utils/lyric.js'
@@ -8,6 +8,16 @@ const cache = new LRU({
   max: 1000,
   ttl: 1000 * 30
 })
+const METING_METHODS = {
+  search: 'search',
+  song: 'song',
+  album: 'album',
+  artist: 'artist',
+  playlist: 'playlist',
+  lrc: 'lyric',
+  url: 'url',
+  pic: 'pic'
+}
 
 export default async (ctx) => {
   // 1. 初始化参数
@@ -33,18 +43,25 @@ export default async (ctx) => {
   }
 
   // 4. 调用 API
-  let data = cache.get(`${server}/${type}/${id}`)
+  const cacheKey = `${server}/${type}/${id}`
+  let data = cache.get(cacheKey)
   if (data === undefined) {
     ctx.set('x-cache', 'miss')
-    const url = `${config.meting.api}/api?server=${server}&type=${type}&id=${id}`
-    data = await got(url).json()
-      .then(res => {
-        if (!res.success) {
-          ctx.throw(500, '上游 API 调用失败')
-        }
-        return res.message
-      })
-    cache.set(`${server}/${type}/${id}`, data, {
+    const meting = new Meting(server)
+    meting.format(true)
+    const method = METING_METHODS[type]
+    let response
+    try {
+      response = await meting[method](id)
+    } catch (error) {
+      ctx.throw(500, '上游 API 调用失败')
+    }
+    try {
+      data = JSON.parse(response)
+    } catch (error) {
+      ctx.throw(500, '上游 API 返回格式异常')
+    }
+    cache.set(cacheKey, data, {
       ttl: type === 'url' ? 1000 * 60 * 10 : 1000 * 60 * 60
     })
   }

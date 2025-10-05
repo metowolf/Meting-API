@@ -12,10 +12,10 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@meting/core": "^1.5.12",
     "@koa/cors": "^3.3.0",
     "@koa/router": "^10.1.1",
     "dotenv": "^16.0.1",
-    "got": "^12.1.0",
     "hash.js": "^1.1.7",
     "koa": "^2.13.4",
     "koa-pino-logger": "^4.0.0",
