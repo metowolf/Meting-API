@@ -49,7 +49,7 @@ docker build -t meting-api .
 
 # 运行容器
 docker run -d \
-  -p 3000:3000 \
+  -p 80:80 \
   -e METING_URL=https://your-domain.com \
   -e METING_TOKEN=your-secret-token \
   --name meting-api \
@@ -64,12 +64,69 @@ services:
   meting-api:
     image: ghcr.io/metowolf/meting-api:latest
     ports:
-      - "3000:3000"
+      - "80:80"
     environment:
       - METING_URL=https://your-domain.com
       - METING_TOKEN=your-secret-token
     restart: unless-stopped
 ```
+
+## HTTPS 配置
+
+### 开发环境
+
+使用自签名证书进行本地调试:
+
+```bash
+mkdir -p certs
+openssl req -x509 -nodes -days 365 \
+  -newkey rsa:2048 \
+  -keyout certs/local.key \
+  -out certs/local.crt \
+  -subj "/CN=localhost"
+```
+
+在启动服务时配置:
+
+```bash
+HTTPS_ENABLED=true \
+SSL_KEY_PATH=certs/local.key \
+SSL_CERT_PATH=certs/local.crt \
+yarn start
+```
+
+### 生产环境
+
+推荐使用 [Let's Encrypt](https://letsencrypt.org/) 提供的免费证书,通过 [Certbot](https://certbot.eff.org/) 自动签发与续期。例如在 Nginx 部署的服务器上:
+
+```bash
+sudo apt install certbot python3-certbot-nginx
+sudo certbot certonly --nginx -d your-domain.com
+```
+
+证书获取后,将 `fullchain.pem` 和 `privkey.pem` 文件路径配置到对应环境变量。
+
+### Docker HTTPS 部署示例
+
+```bash
+docker run -d \
+  -p 80:80 \
+  -p 443:443 \
+  -v /etc/letsencrypt/live/your-domain.com:/certs:ro \
+  -e HTTPS_ENABLED=true \
+  -e SSL_KEY_PATH=/certs/privkey.pem \
+  -e SSL_CERT_PATH=/certs/fullchain.pem \
+  -e METING_URL=https://your-domain.com \
+  --name meting-api \
+  meting-api
+```
+
+### 反向代理推荐
+
+生产环境可搭配 Nginx 或 Caddy 作为反向代理,实现自动证书管理和负载均衡:
+- [Nginx HTTPS 配置示例](https://docs.nginx.com/nginx/admin-guide/security-controls/terminating-ssl-http/)
+- [Caddy 自动 HTTPS 说明](https://caddyserver.com/docs/automatic-https)
+
 
 ## 环境变量配置
 
@@ -78,6 +135,11 @@ services:
 | 变量名 | 说明 | 默认值 |
 |--------|------|--------|
 | `HTTP_PREFIX` | HTTP 路由前缀 | `` (空) |
+| `HTTP_PORT` | HTTP 服务监听端口 | `80` |
+| `HTTPS_ENABLED` | 是否启用 HTTPS 服务 | `false` |
+| `HTTPS_PORT` | HTTPS 服务监听端口 | `443` |
+| `SSL_KEY_PATH` | HTTPS 私钥文件路径 | - |
+| `SSL_CERT_PATH` | HTTPS 证书文件路径 | - |
 | `METING_URL` | API 服务的公网访问地址(用于生成回调 URL) | - |
 | `METING_TOKEN` | HMAC 签名密钥 | `token` |
 
@@ -143,17 +205,17 @@ GET /api
 
 搜索歌曲:
 ```bash
-curl "http://localhost:3000/api?server=netease&type=search&id=周杰伦"
+curl "http://localhost:80/api?server=netease&type=search&id=周杰伦"
 ```
 
 获取歌曲详情:
 ```bash
-curl "http://localhost:3000/api?server=netease&type=song&id=歌曲ID"
+curl "http://localhost:80/api?server=netease&type=song&id=歌曲ID"
 ```
 
 获取歌词(需要 token):
 ```bash
-curl "http://localhost:3000/api?server=netease&type=lrc&id=歌曲ID&auth=计算的token"
+curl "http://localhost:80/api?server=netease&type=lrc&id=歌曲ID&auth=计算的token"
 ```
 
 ### 鉴权机制

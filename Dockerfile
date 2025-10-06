@@ -9,5 +9,5 @@ COPY . /app
 
 RUN yarn
 
-EXPOSE 3000
+EXPOSE 80 443
 ENTRYPOINT ["node", "src/index.js"]
