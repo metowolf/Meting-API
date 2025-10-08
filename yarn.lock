@@ -98,10 +98,10 @@
   resolved "https://registry.npmjs.org/@humanwhocodes/retry/-/retry-0.4.3.tgz"
   integrity sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ==
 
-"@meting/core@^1.5.12":
-  version "1.5.12"
-  resolved "https://registry.npmjs.org/@meting/core/-/core-1.5.12.tgz"
-  integrity sha512-UetXtLc3k49Jj6vvYXqWXYNs4KM6lN/L2N4NNUCrB4cularGLWMBv5rkFS5ZU++3pdvnFwLwX8DtxEXSxuWtkA==
+"@meting/core@^1.5.13":
+  version "1.5.13"
+  resolved "https://registry.yarnpkg.com/@meting/core/-/core-1.5.13.tgz#d5178b99124e5ba8e5cef36ca70d6e63d7426339"
+  integrity sha512-9jVXr6IWNn+4undmM+NDIxa1p7ROcHHLh4x1vCcZGh45fsV4Xh93sEwGNE6YpNMoK2aEfhBvregqGcE2l8bVCw==
 
 "@rtsao/scc@^1.1.0":
   version "1.1.0"

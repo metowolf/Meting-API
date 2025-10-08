@@ -1,4 +1,4 @@
-import Meting from '@meting/core/lib/meting.esm.js'
+import Meting from '@meting/core'
 import hashjs from 'hash.js'
 import { HTTPException } from 'hono/http-exception'
 import config from '../config.js'
