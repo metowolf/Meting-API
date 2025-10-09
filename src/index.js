@@ -6,6 +6,7 @@ import { readFileSync } from 'node:fs'
 import { requestLogger, logger } from './middleware/logger.js'
 import errors from './middleware/errors.js'
 import apiService from './service/api.js'
+import demoService from './service/demo.js'
 import config from './config.js'
 
 const app = new Hono()
@@ -14,6 +15,7 @@ const app = new Hono()
   .use(errors)
 
 app.get(`${config.http.prefix}/api`, apiService)
+app.get(`${config.http.prefix}/demo`, demoService)
 
 serve({
   fetch: app.fetch,

@@ -3,6 +3,7 @@ import hashjs from 'hash.js'
 import { HTTPException } from 'hono/http-exception'
 import config from '../config.js'
 import { format as lyricFormat } from '../utils/lyric.js'
+import { readCookieFile, isAllowedHost } from '../utils/cookie.js'
 import { LRUCache } from 'lru-cache'
 
 const cache = new LRUCache({
@@ -50,6 +51,16 @@ export default async (c) => {
     c.header('x-cache', 'miss')
     const meting = new Meting(server)
     meting.format(true)
+
+    // 检查 referrer 并配置 cookie
+    const referrer = c.req.header('referer')
+    if (isAllowedHost(referrer)) {
+      const cookie = await readCookieFile(server)
+      if (cookie) {
+        meting.cookie(cookie)
+      }
+    }
+
     const method = METING_METHODS[type]
     let response
     try {
@@ -80,6 +91,11 @@ export default async (c) => {
         .replace('://m7c.', '://m7.')
         .replace('://m8c.', '://m8.')
         .replace('http://', 'https://')
+      if (url.includes('vuutv=')) {
+        const tempUrl = new URL(url)
+        tempUrl.search = ''
+        url = tempUrl.toString()
+      }
     }
     if (server === 'tencent') {
       url = url
