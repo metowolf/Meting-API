@@ -1,6 +1,6 @@
 {
   "name": "@meting/server",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "main": "src/index.js",
   "type": "module",
   "author": "metowolf",
