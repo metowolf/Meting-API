@@ -81,6 +81,10 @@ docker run -p 3000:3000 -e METING_URL=https://example.com -e METING_TOKEN=secret
 
 ## 开发注意事项
 
+### 版本发布
+- 更新 package.json 中的 version，采用 Semantic Versioning
+- 打 git tag vX.X.X
+
 ### 错误处理
 - 使用 Hono 错误中间件统一处理(`src/middleware/errors.js`)
 - 错误信息通过 `x-error-message` 响应头传递
