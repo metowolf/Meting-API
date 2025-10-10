@@ -27,9 +27,9 @@ export default {
     url: process.env.METING_URL || '',
     token: process.env.METING_TOKEN || 'token',
     cookie: {
-      allowHosts: process.env.METING_COOKIE_ALLOW_HOSTS ?
-        (process.env.METING_COOKIE_ALLOW_HOSTS).split(',').map(h => h.trim().toLowerCase()) :
-        []
+      allowHosts: process.env.METING_COOKIE_ALLOW_HOSTS
+        ? (process.env.METING_COOKIE_ALLOW_HOSTS).split(',').map(h => h.trim().toLowerCase())
+        : []
     }
   }
 }

@@ -149,6 +149,13 @@ docker run -d \
 | `SSL_CERT_PATH` | HTTPS 证书文件路径 | - |
 | `METING_URL` | API 服务的公网访问地址(用于生成回调 URL) | - |
 | `METING_TOKEN` | HMAC 签名密钥 | `token` |
+| `METING_COOKIE_ALLOW_HOSTS` | 允许使用 cookie 的 referrer 域名白名单(逗号分隔) | `` (空,不限制) |
+| `METING_COOKIE_NETEASE` | 网易云音乐 Cookie | - |
+| `METING_COOKIE_TENCENT` | QQ音乐 Cookie | - |
+| `METING_COOKIE_KUGOU` | 酷狗音乐 Cookie | - |
+| `METING_COOKIE_XIAMI` | 虾米音乐 Cookie | - |
+| `METING_COOKIE_BAIDU` | 百度音乐 Cookie | - |
+| `METING_COOKIE_KUWO` | 酷我音乐 Cookie | - |
 
 ## API 接口文档
 
@@ -255,6 +262,60 @@ const token = generateToken('netease', 'url', '123456');
 - 响应头 `x-cache`:
   - `miss`:缓存未命中,调用上游 API
   - 无此头:缓存命中
+
+## Cookie 配置
+
+部分音乐平台的 API 需要登录态才能访问完整数据。可以通过以下两种方式配置 Cookie:
+
+### 方式一:环境变量(推荐)
+
+通过环境变量 `METING_COOKIE_大写平台名` 配置:
+
+```bash
+# Docker 部署示例
+docker run -d \
+  -p 80:80 \
+  -e METING_COOKIE_NETEASE="your_netease_cookie" \
+  -e METING_COOKIE_TENCENT="your_tencent_cookie" \
+  --name meting-api \
+  meting-api
+```
+
+### 方式二:文件存储
+
+在项目根目录 `cookie/` 文件夹下创建以平台名命名的文件(无扩展名):
+
+```
+cookie/
+  ├── netease    # 网易云音乐 Cookie
+  ├── tencent    # QQ音乐 Cookie
+  ├── kugou      # 酷狗音乐 Cookie
+  └── ...
+```
+
+每个文件存储对应平台的 Cookie 字符串。
+
+### Cookie 优先级
+
+1. 优先从环境变量读取(`METING_COOKIE_NETEASE` 等)
+2. 环境变量不存在时从文件读取(`cookie/netease` 等)
+
+### Cookie 缓存
+
+- Cookie 内容会在内存中缓存 5 分钟,减少文件系统读取
+- 使用文件存储时,修改 cookie 文件会自动清除缓存,立即生效
+- 环境变量方式需要重启服务才能更新
+
+### Referrer 白名单
+
+通过 `METING_COOKIE_ALLOW_HOSTS` 环境变量限制哪些来源可以使用 Cookie:
+
+```bash
+# 仅允许特定域名使用 Cookie
+METING_COOKIE_ALLOW_HOSTS=example.com,music.example.com
+```
+
+不设置时不限制来源。这可以防止 Cookie 被第三方滥用。
 
 ## 错误处理
 
