@@ -4,7 +4,7 @@
 
 ## 特性
 
-- 🎵 支持多个音乐平台:网易云、QQ音乐、酷狗、虾米、百度、酷我
+- 🎵 支持多个音乐平台:网易云、QQ音乐、酷狗、百度、酷我
 - 🚀 基于 Hono.js 高性能框架
 - 💾 内置 LRU 缓存机制,减少上游 API 调用
 - 🔐 HMAC-SHA1 令牌鉴权,保护敏感接口
@@ -18,7 +18,6 @@
 | 网易云音乐 | `netease` | - |
 | QQ音乐 | `tencent` | - |
 | 酷狗音乐 | `kugou` | - |
-| 虾米音乐 | `xiami` | - |
 | 百度音乐 | `baidu` | - |
 | 酷我音乐 | `kuwo` | - |
 
@@ -153,7 +152,6 @@ docker run -d \
 | `METING_COOKIE_NETEASE` | 网易云音乐 Cookie | - |
 | `METING_COOKIE_TENCENT` | QQ音乐 Cookie | - |
 | `METING_COOKIE_KUGOU` | 酷狗音乐 Cookie | - |
-| `METING_COOKIE_XIAMI` | 虾米音乐 Cookie | - |
 | `METING_COOKIE_BAIDU` | 百度音乐 Cookie | - |
 | `METING_COOKIE_KUWO` | 酷我音乐 Cookie | - |
 
@@ -169,7 +167,7 @@ GET /api
 
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `server` | string | 是 | 音乐平台:`netease`/`tencent`/`kugou`/`xiami`/`baidu`/`kuwo` |
+| `server` | string | 是 | 音乐平台:`netease`/`tencent`/`kugou`/`baidu`/`kuwo` |
 | `type` | string | 是 | 操作类型:`search`/`song`/`album`/`artist`/`playlist`/`lrc`/`url`/`pic` |
 | `id` | string | 是 | 资源 ID |
 | `token` 或 `auth` | string | 条件 | 认证令牌(仅 `lrc`/`url`/`pic` 类型需要) |

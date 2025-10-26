@@ -98,10 +98,10 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/retry/-/retry-0.4.3.tgz#c2b9d2e374ee62c586d3adbea87199b1d7a7a6ba"
   integrity sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ==
 
-"@meting/core@^1.5.14":
-  version "1.5.14"
-  resolved "https://registry.yarnpkg.com/@meting/core/-/core-1.5.14.tgz#6e50ed51adbf3b102d86f1599feb8647b460e1ca"
-  integrity sha512-oR7uGMA6YFO13rLL8zKzl5OsFwnI4OcLItXfW1iWk89pFvaTtOxLbzPxAryFpPP9xsloblY9DINlndNlee5dog==
+"@meting/core@^1.6.0":
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/@meting/core/-/core-1.6.0.tgz#588a68959c5602326ec0c7796d62165ff8d5af2e"
+  integrity sha512-ctOTU7TKHwzfy8wC//5B1drNhuNHbdjsaXYFDbhmmV4OstYpGahJyRMN99jmjAXY7dN4G7snx5w+1378ebgzBA==
 
 "@rtsao/scc@^1.1.0":
   version "1.1.0"

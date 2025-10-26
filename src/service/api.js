@@ -30,7 +30,7 @@ export default async (c) => {
   const token = query.token || query.auth || 'token'
 
   // 2. 校验参数
-  if (!['netease', 'tencent', 'kugou', 'xiami', 'baidu', 'kuwo'].includes(server)) {
+  if (!['netease', 'tencent', 'kugou', 'baidu', 'kuwo'].includes(server)) {
     throw new HTTPException(400, { message: 'server 参数不合法' })
   }
   if (!['song', 'album', 'search', 'artist', 'playlist', 'lrc', 'url', 'pic'].includes(type)) {

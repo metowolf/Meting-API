@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 项目概述
 
-Meting-API 是一个基于 Hono.js 的音乐 API 代理服务,封装了 @meting/core 库提供的多平台音乐 API。项目支持网易云、腾讯、酷狗、虾米、百度、酷我等音乐平台的搜索、歌曲、专辑、歌手、歌单、歌词、URL 和封面图片获取。
+Meting-API 是一个基于 Hono.js 的音乐 API 代理服务,封装了 @meting/core 库提供的多平台音乐 API。项目支持网易云、腾讯、酷狗、百度、酷我等音乐平台的搜索、歌曲、专辑、歌手、歌单、歌词、URL 和封面图片获取。
 
 ## 核心架构
 
@@ -64,7 +64,7 @@ docker run -p 3000:3000 -e METING_URL=https://example.com -e METING_TOKEN=secret
 单一端点: `GET /api`(可通过 HTTP_PREFIX 修改)
 
 **查询参数**:
-- `server`: 音乐平台(netease/tencent/kugou/xiami/baidu/kuwo)
+- `server`: 音乐平台(netease/tencent/kugou/baidu/kuwo)
 - `type`: 操作类型(search/song/album/artist/playlist/lrc/url/pic)
 - `id`: 资源 ID
 - `token`/`auth`: 认证令牌(仅 lrc/url/pic 需要)
@@ -93,7 +93,7 @@ docker run -p 3000:3000 -e METING_URL=https://example.com -e METING_TOKEN=secret
 
 ### 参数验证
 在处理请求前必须严格校验:
-- server 参数必须在白名单内(6 个平台)
+- server 参数必须在白名单内(5 个平台)
 - type 参数必须在允许的 8 种类型内
 - 不合法参数返回 400 错误
 
