@@ -1,34 +1,36 @@
 {
-  "name": "@meting/server",
-  "version": "1.10.0",
-  "main": "src/index.js",
-  "type": "module",
-  "author": "metowolf",
-  "license": "MIT",
-  "private": true,
+  "name": "meting-backend-js",
+  "version": "1.1.2",
+  "description": "",
+  "main": "node.js",
   "scripts": {
-    "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
-    "lint": "eslint ."
+    "build:all": "node esbuild.config.js",
+    "start:node": "node node.js",
+    "start:deno": "deno run --allow-net --allow-env dist/deno.js",
+    "test": "vitest run",
+    "patch": "npm version patch && git push origin main && git push origin --tags",
+    "minor": "npm version minor && git push origin main && git push origin --tags",
+    "major": "npm version major && git push origin main && git push origin --tags"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "type": "module",
+  "author": "xizeyoupan",
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild-plugin-resolve": "^1.0.3",
+    "esbuild-plugin-text-replace": "^1.2.0",
+    "vitest": "^0.29.2"
   },
   "dependencies": {
-    "@hono/node-server": "^1.19.6",
-    "@meting/core": "^1.6.0",
-    "dotenv": "^17.2.3",
-    "hash.js": "^1.1.7",
-    "hono": "^4.10.7",
-    "lru-cache": "^11.2.2",
-    "pino": "^10.1.0"
-  },
-  "devDependencies": {
-    "@eslint/eslintrc": "^3.3.3",
-    "eslint": "^9.39.1",
-    "eslint-config-standard": "17.1.0",
-    "eslint-plugin-import": "2.32.0",
-    "eslint-plugin-n": "17.23.1",
-    "eslint-plugin-promise": "7.2.1",
-    "eslint-plugin-standard": "^5.0.0",
-    "nodemon": "^3.1.11",
-    "pino-pretty": "^13.1.2"
+    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
+    "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
+    "@hono/node-server": "^1.8.2",
+    "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.0",
+    "esbuild": "0.17.5",
+    "hono": "^4.1.0",
+    "nanoid": "^4.0.0"
   }
 }

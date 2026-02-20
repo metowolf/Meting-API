@@ -1,13 +1,24 @@
-FROM node:22-alpine
-
-ARG NODE_ENV
-ENV NODE_ENV=${NODE_ENV:-production}
+FROM node:23-alpine3.20
 
 WORKDIR /app
-
 COPY . /app
 
-RUN yarn
+ARG UID
+ARG GID
+ARG PORT
 
-EXPOSE 80 443
-ENTRYPOINT ["node", "src/index.js"]
+ENV UID=${UID:-1010}
+ENV GID=${GID:-1010}
+ENV PORT=${PORT:-3000}
+
+RUN addgroup -g ${GID} --system meting \
+    && adduser -G meting --system -D -s /bin/sh -u ${UID} meting
+
+RUN npm i
+
+RUN chown -R meting:meting /app
+USER meting
+
+EXPOSE ${PORT}
+
+CMD ["node", "/app/node.js"]

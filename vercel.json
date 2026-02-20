@@ -1,0 +1,11 @@
+{
+    "env": {
+        "RUNTIME": "vercel"
+    },
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/api"
+        }
+    ]
+}

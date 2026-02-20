@@ -1,3 +1,4 @@
-node_modules/
-.env
-cookie/
+node_modules
+dist
+.vscode
+.vercel
