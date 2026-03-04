@@ -12,7 +12,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@hono/node-server": "^1.19.6",
+    "@hono/node-server": "^1.19.10",
     "@meting/core": "^1.6.0",
     "dotenv": "^17.2.3",
     "hash.js": "^1.1.7",
