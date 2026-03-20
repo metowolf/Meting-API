@@ -169,7 +169,7 @@ GET /api
 |------|------|------|------|
 | `server` | string | 是 | 音乐平台:`netease`/`tencent`/`kugou`/`baidu`/`kuwo` |
 | `type` | string | 是 | 操作类型:`search`/`song`/`album`/`artist`/`playlist`/`lrc`/`url`/`pic` |
-| `id` | string | 是 | 资源 ID |
+| `id` | string | 是 | 资源 ID，或酷狗桌面歌单分享短码/链接 |
 | `token` 或 `auth` | string | 条件 | 认证令牌(仅 `lrc`/`url`/`pic` 类型需要) |
 
 ### 操作类型说明
@@ -225,6 +225,11 @@ curl "http://localhost:80/api?server=netease&type=search&id=周杰伦"
 curl "http://localhost:80/api?server=netease&type=song&id=歌曲ID"
 ```
 
+获取酷狗桌面分享歌单:
+```bash
+curl "http://localhost:80/api?server=kugou&type=playlist&id=7PUvhf0FZV2"
+```
+
 获取歌词(需要 token):
 ```bash
 curl "http://localhost:80/api?server=netease&type=lrc&id=歌曲ID&auth=计算的token"
@@ -256,10 +261,20 @@ const token = generateToken('netease', 'url', '123456');
 - 默认缓存容量:1000 条记录
 - 缓存时长:
   - `url` 类型:10 分钟
+  - 酷狗桌面分享歌单:30 秒
   - 其他类型:1 小时
 - 响应头 `x-cache`:
   - `miss`:缓存未命中,调用上游 API
   - 无此头:缓存命中
+
+## 酷狗兼容性增强
+
+- `pic` 在允许使用 Cookie 的情况下会优先通过酷狗 `songinfo` 补抓歌曲封面,避免部分歌曲返回歌手图
+- `playlist` 额外兼容酷狗桌面分享歌单,支持以下 `id` 形式:
+  - 分享短码,如 `7PUvhf0FZV2`
+  - `t1.kugou.com` 短链
+  - `wwwapi.kugou.com/share/zlist.html` 长链
+- 当上述兼容链路不适用或解析失败时,仍然回退到原有 `@meting/core` provider 逻辑
 
 ## Cookie 配置
 
