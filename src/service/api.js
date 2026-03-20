@@ -4,6 +4,12 @@ import { HTTPException } from '../utils/http-exception.js'
 import config from '../config.js'
 import { format as lyricFormat } from '../utils/lyric.js'
 import { readCookieFile, isAllowedHost } from '../utils/cookie.js'
+import { getKugouCoverFromSonginfo } from '../utils/kugou-songinfo.js'
+import {
+  canUseKugouSharePlaylist,
+  getKugouPlaylistFromShare,
+  normalizeKugouSharePlaylistInput
+} from '../utils/kugou-share-playlist.js'
 import { LRUCache } from 'lru-cache'
 
 const cache = new LRUCache({
@@ -27,8 +33,14 @@ export default async (request, ctx) => {
   const query = Object.fromEntries(url.searchParams)
   const server = query.server || 'netease'
   const type = query.type || 'search'
-  const id = query.id || 'hello'
+  let id = query.id || 'hello'
   const token = query.token || query.auth || 'token'
+
+  if (server === 'kugou' && type === 'playlist') {
+    id = normalizeKugouSharePlaylistInput(id) || id
+  }
+
+  const isKugouSharePlaylist = server === 'kugou' && type === 'playlist' && canUseKugouSharePlaylist(id)
 
   // 2. 校验参数
   if (!['netease', 'tencent', 'kugou', 'baidu', 'kuwo'].includes(server)) {
@@ -59,23 +71,40 @@ export default async (request, ctx) => {
       const cookie = await readCookieFile(server)
       if (cookie) {
         meting.cookie(cookie)
+
+        if (server === 'kugou' && type === 'pic') {
+          const cover = await getKugouCoverFromSonginfo({ hash: id, cookie, size: 400 })
+          if (cover) {
+            data = cover
+          }
+        }
       }
     }
 
-    const method = METING_METHODS[type]
-    let response
-    try {
-      response = await meting[method](id)
-    } catch {
-      throw new HTTPException(500, { message: '上游 API 调用失败' })
-    }
-    try {
-      data = JSON.parse(response)
-    } catch {
-      throw new HTTPException(500, { message: '上游 API 返回格式异常' })
+    if (data === undefined) {
+      if (isKugouSharePlaylist) {
+        data = await getKugouPlaylistFromShare(id)
+      }
+
+      if (data === undefined) {
+        const method = METING_METHODS[type]
+        let response
+        try {
+          response = await meting[method](id)
+        } catch {
+          throw new HTTPException(500, { message: '上游 API 调用失败' })
+        }
+        try {
+          data = JSON.parse(response)
+        } catch {
+          throw new HTTPException(500, { message: '上游 API 返回格式异常' })
+        }
+      }
     }
     cache.set(cacheKey, data, {
-      ttl: type === 'url' ? 1000 * 60 * 10 : 1000 * 60 * 60
+      ttl: isKugouSharePlaylist
+        ? 1000 * 30
+        : (type === 'url' ? 1000 * 60 * 10 : 1000 * 60 * 60)
     })
   }
 
@@ -125,13 +154,32 @@ export default async (request, ctx) => {
     })
   }
 
-  return Response.json(data.map(x => {
+  const safeData = Array.isArray(data) ? data : (data?.error ? [] : [data])
+  return Response.json(safeData.map(x => {
+    const title = x.name || x.songName || '未知歌曲'
+    let author = '未知歌手'
+    if (Array.isArray(x.artist)) {
+      author = x.artist.join(' / ')
+    } else if (Array.isArray(x.authors)) {
+      author = x.authors.map(a => a.author_name).join(' / ')
+    } else if (typeof x.singerName === 'string') {
+      author = x.singerName
+    }
+
+    const urlId = server === 'kugou'
+      ? (x.hash || x.url_id || id)
+      : (x.url_id || x.hash || id)
+    const picId = server === 'kugou'
+      ? (x.hash || x.pic_id || x.url_id || id)
+      : (x.pic_id || x.album_audio_id || x.albumid || x.hash || id)
+    const lrcId = x.lyric_id || x.hash || id
+
     return {
-      title: x.name,
-      author: x.artist.join(' / '),
-      url: `${config.meting.url}/api?server=${server}&type=url&id=${x.url_id}&auth=${auth(server, 'url', x.url_id)}`,
-      pic: `${config.meting.url}/api?server=${server}&type=pic&id=${x.pic_id}&auth=${auth(server, 'pic', x.pic_id)}`,
-      lrc: `${config.meting.url}/api?server=${server}&type=lrc&id=${x.lyric_id}&auth=${auth(server, 'lrc', x.lyric_id)}`
+      title,
+      author,
+      url: `${config.meting.url}/api?server=${server}&type=url&id=${urlId}&auth=${auth(server, 'url', urlId)}`,
+      pic: `${config.meting.url}/api?server=${server}&type=pic&id=${picId}&auth=${auth(server, 'pic', picId)}`,
+      lrc: `${config.meting.url}/api?server=${server}&type=lrc&id=${lrcId}&auth=${auth(server, 'lrc', lrcId)}`
     }
   }))
 }
