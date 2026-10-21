@@ -1,2 +1,11 @@
 node_modules/
+.git/
+.github/
+.claude/
 .env
+.env.*
+*.md
+Dockerfile
+.dockerignore
+docker-compose*.yml
+bun.lockb
